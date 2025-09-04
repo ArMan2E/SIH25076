@@ -44,22 +44,15 @@ def init_db():
     """
     Base.metadata.create_all(bind=engine)
 
+# in backend/app/models.py (existing)
 def save_query_record(caller, question, answer, sources, confidence=0.0):
-    """
-    Saves a new query/response record to the database.
-    """
     db = SessionLocal()
     try:
-        rec = QueryRecord(
-            caller=caller,
-            question=question,
-            answer=answer,
-            sources=str(sources),
-            confidence=confidence
-        )
+        rec = QueryRecord(caller=caller, question=question, answer=answer, sources=str(sources), confidence=confidence)
         db.add(rec)
         db.commit()
         db.refresh(rec)
         return rec
     finally:
         db.close()
+

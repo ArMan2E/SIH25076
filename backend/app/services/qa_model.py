@@ -1,46 +1,32 @@
 # backend/app/services/qa_model.py
-
-import os
+import subprocess
+import shlex
+import html
 import json
-from google.generativeai import chat
-from google.generativeai.client import ChatClient
 
-# Initialize Gemini client
-client = ChatClient(api_key=os.getenv("GEMINI_API_KEY"))
+MODEL_NAME = "tinyllama:1.1b"   # Ollama model you have
 
-async def answer_query(question: str, context: str = "") -> str:
+def answer_query_english(question_en: str, timeout: int = 30) -> dict:
     """
-    Ask Gemini Pro 2.5 Flash to answer the question in Malayalam.
-    Returns the answer text.
+    Send English question to local Ollama tinyllama and return answer dict:
+    { "answer": "...", "confidence": 0.0, "sources": [] }
     """
     try:
-        prompt = f"Context: {context}\n\nQuestion: {question}\nAnswer in Malayalam, short and clear."
-
-        response = client.send_message(
-            model="gemini-pro-2.5-flash",
-            message=prompt,
-            temperature=0.3,
-            max_output_tokens=500
+        # Use subprocess to call ollama CLI. Quote question so shell doesn't mangle it.
+        # Better to pass as args list for safety.
+        # Note: ollama run <model> <prompt>
+        proc = subprocess.run(
+            ["ollama", "run", MODEL_NAME, question_en],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=True
         )
-
-        # Gemini response text
-        answer = response.text if hasattr(response, "text") else str(response)
-        return answer
-
+        out = proc.stdout.strip()
+        # sometimes Ollama prints additional info; keep stdout as answer
+        return {"answer": out, "confidence": 0.0, "sources": []}
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr or str(e)
+        return {"answer": f"[ERROR] Ollama failed: {stderr}", "confidence": 0.0, "sources": []}
     except Exception as e:
-        return f"[ERROR] {e}"
-
-def serialize_sources(sources: list) -> str:
-    """
-    Convert Python list to JSON string for SQLite storage.
-    """
-    return json.dumps(sources)
-
-def deserialize_sources(sources_json: str) -> list:
-    """
-    Convert JSON string back to Python list.
-    """
-    try:
-        return json.loads(sources_json)
-    except:
-        return []
+        return {"answer": f"[ERROR] {e}", "confidence": 0.0, "sources": []}
