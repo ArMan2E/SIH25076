@@ -1,3 +1,10 @@
 venv
 .env
 .env.example
+# no need Py cache 
+__pycache__/
+*.pyc
+
+# no need for aws_provider and aws creds to be uploaded to git
+.terraform/
+*.tfvars
