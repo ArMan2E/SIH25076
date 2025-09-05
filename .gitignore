@@ -8,3 +8,8 @@ __pycache__/
 # no need for aws_provider and aws creds to be uploaded to git
 .terraform/
 *.tfvars
+*.tfstate
+# terraform creates tfstafe.backup -> contains secret 
+*.tfstate.* 
+
+*.plan
