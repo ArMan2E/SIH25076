@@ -1,37 +1,11 @@
-export interface ParsedMessage {
-  type: "text" | "image" | "audio" | "video" | "location" | "document";
-
-  // common message body
-  from?: string;
-  id?: string;
-  timestamp?: string;
-  // text message type
-  body?: string;
-  // media, can be used for document document.id -> mediaId
-  mediaId?: string; // mandatory to download the file from meta server
-  caption?: string;
-  mimeType?: string;
-
-  // document type
-  filename?: string;
-  sha256?: string;
-
-  // location
-  latitude?: number;
-  longitude?: number;
-  address?: string; // location address
-  name?: string; // location name
-  url?: string;
-  // fallback
-  raw?: any;
-}
+import type { ParsedMessage } from "../types/message";
 
 export function parseWhatsAppMessage(message: any): ParsedMessage | null {
   const base: ParsedMessage = {
     type: message.type,
     id: message.id, // whats app message id
     from: message.from,
-    timestamp: message.timestap,
+    timestamp: message.timestamp,
     raw: message,
   };
 
@@ -75,6 +49,11 @@ export function parseWhatsAppMessage(message: any): ParsedMessage | null {
         name: message.location?.name,
         url: message.location?.url,
         address: message.location?.address,
+      };
+    case "text":
+      return {
+        ...base,
+        body: message.text?.body,
       };
     default:
       return null;

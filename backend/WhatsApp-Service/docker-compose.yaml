@@ -1,0 +1,20 @@
+services:
+  krishi-wa-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: host
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+    container_name: krishi-WA-service
+    ports:
+      - "8080:8080" # Map host  8080 to container 8080
+    env_file:
+      - .env
+    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge

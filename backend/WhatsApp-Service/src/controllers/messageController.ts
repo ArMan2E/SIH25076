@@ -1,15 +1,17 @@
 import type { Request, Response } from "express";
-import { parseWhatsAppMessage } from "../service/whatsappParser";
+import { parseWhatsAppMessage } from "../util/whatsappParser";
+import { processIncomingMessage } from "../workers/processMessageMedia";
 // code written in the documentation only
 export const verifyWebhook = (req: Request, res: Response) => {
   const hubMode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
-  const challange = req.query["hub.challange"];
+  const challenge = req.query["hub.challenge"];
 
   if (hubMode === "subscribe" && token === process.env.WA_VERIFY_TOKEN) {
     console.log("Webhook verified....");
-    res.status(200).send(challange);
+    res.status(200).send(challenge);
   } else {
+    console.log("Verfication error");
     res.sendStatus(403);
   }
 };
@@ -21,8 +23,6 @@ export const verifyWebhook = (req: Request, res: Response) => {
  * need to parse it properly , here using option chaining
  * the func is async as later on the parsed message is sent to db and obj storage
  *  according to the type field in the payload
- *
- *
  */
 export const handleIncomingMessage = async (req: Request, res: Response) => {
   try {
@@ -38,9 +38,14 @@ export const handleIncomingMessage = async (req: Request, res: Response) => {
     // instead of treating as error gracefuly says response is received ot meta
     if (!entry) return res.sendStatus(200);
 
-    //
-    const parsedMessage = parseWhatsAppMessage(entry);
-    console.log(parsedMessage); // rn console.
+    // moved to worker
+    // const parsedMessage = parseWhatsAppMessage(entry);
+    // console.log(parsedMessage); // rn console.
+    res.sendStatus(200); // send the response to wap ( so not to retry)
+    // now run the bohout heavy-DRIVER like media & DB persistance async
+    // not using queue/worker normal async for prototyping
+
+    processIncomingMessage(entry); // worker process the emssage
   } catch (error) {
     console.error("Error handling the payload", error);
     res.sendStatus(500); // cause it is my server hence 500 not metas error
