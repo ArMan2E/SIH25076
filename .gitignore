@@ -1,6 +1,7 @@
 venv
 .env
 .env.example
+
 # no need Py cache 
 __pycache__/
 *.pyc
@@ -9,7 +10,8 @@ __pycache__/
 .terraform/
 *.tfvars
 *.tfstate
-# terraform creates tfstafe.backup -> contains secret 
+
+# terraform creates tfstate.backup -> contains secrets
 *.tfstate.* 
 
 *.plan
